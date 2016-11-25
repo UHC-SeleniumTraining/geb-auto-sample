@@ -1,0 +1,62 @@
+apply plugin: 'groovy'
+
+version = '1.0-SNAPSHOT'
+description = 'Geb Starter Project'
+
+repositories {
+    maven {
+        url '<maven repo>'
+    }
+}
+
+sourceCompatibility = 1.8
+ext {
+    groovyVersion = '2.4.7'
+    spockVersion = '1.0-groovy-2.4'
+    gebVersion = '1.0'
+    seleniumVersion = '3.0.1'
+}
+
+dependencies {
+    testCompile "org.codehaus.groovy:groovy-all:${groovyVersion}"
+    testCompile "org.spockframework:spock-core:${spockVersion}"
+    testCompile "org.gebish:geb-spock:$gebVersion"
+    testCompile "org.gebish:geb-core:$gebVersion"
+    testCompile "org.seleniumhq.selenium:selenium-chrome-driver:$seleniumVersion"
+    testCompile('com.athaydes:spock-reports:1.2.13') {
+        transitive = false // this avoids affecting your version of Groovy/Spock
+    }
+    testCompile('io.github.bonigarcia:webdrivermanager:1.4.10') {
+        exclude group: 'org.seleniumhq.selenium'
+    }
+}
+
+test {
+    maxParallelForks = 3
+
+    System.properties.propertyNames().each { prop ->
+        systemProperty prop, System.properties[prop]
+    }
+    systemProperty 'project.buildDir', project.buildDir
+    systemProperty 'geb.env', System.properties['geb.env'] ?: 'chromegridprod'
+
+    println '=' * 30
+    println "geb.env> ${systemProperties['geb.env']}"
+    println '=' * 30
+
+    // show standard out and standard error of the test JVM(s) on the console
+    testLogging.showStandardStreams = true
+
+    // set heap size for the test JVM(s)
+    minHeapSize = '128m'
+    maxHeapSize = '512m'
+
+    // listen to events in the test execution lifecycle
+    beforeTest { descriptor ->
+        logger.lifecycle('Running test: {}', descriptor)
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '3.1'
+}
